@@ -87,11 +87,11 @@
   // 宿主函数别名（跨前端代际兼容）：rc.5~rc.7 为 vc/hp；rc.8+ 压缩器改名 Xu/jd（rc.8 为 Sd）。
   // 运行时 typeof 探测——两代 bundle 通用，行为与旧版直接调用完全一致。
   function __vcpVc() {
-    var fn = typeof vc === 'function' ? vc : (typeof Xu === 'function' ? Xu : null)
+    var fn = typeof x8 === 'function' ? x8 : (typeof vc === 'function' ? vc : (typeof Xu === 'function' ? Xu : null))
     return fn && fn.apply(null, arguments)
   }
   function __vcpHp(s) {
-    var fn = typeof hp === 'function' ? hp : (typeof jd === 'function' ? jd : (typeof Sd === 'function' ? Sd : null))
+    var fn = typeof ub === 'function' ? ub : (typeof hp === 'function' ? hp : (typeof jd === 'function' ? jd : (typeof Sd === 'function' ? Sd : null)))
     return fn ? fn(s) : {}
   }
   // ---- 可信模式（Trusted Mode）v7.1 · 先生定调 2026-08-29 ----
@@ -647,7 +647,7 @@
     var b = doc.body
     for (var j = 0; j < b.childNodes.length; j++) o.push(__vcpVc(b.childNodes[j], o.length))
     if (!o.length) return null
-    var res = o.length === 1 ? o[0] : f.jsx(f.Fragment, { children: o })
+    var res = o.length === 1 ? o[0] : (typeof f!=="undefined"&&f.jsx?f.jsx(f.Fragment,{children:o}):(typeof l!=="undefined"&&l.jsx?l.jsx(l.Fragment,{children:o}):o))
     guardChildren(res) // v6.23：子容器布局防崩递归兜底（新增块粒度，微秒级）
     return res
   }
@@ -1082,7 +1082,7 @@
     }
     // 流式：未闭合标签防御——仅当整个 html 连一个 '>' 都没有（首个开标签写到一半）
     // 才不渲染；末尾标签未闭合是流式常态，交给 v6 的 incomplete/tail 增量处理。
-    if (v.indexOf('>') === -1) return f.jsx(f.Fragment, { children: [] })
+    if (v.indexOf('>') === -1) return (typeof f!=="undefined"&&f.jsx?f.jsx(f.Fragment,{children:[]}):(typeof l!=="undefined"&&l.jsx?l.jsx(l.Fragment,{children:[]}):[]))
     var key = 's:' + v
     if (F.c.has(key)) { F.hits++; return F.c.get(key) }
 
@@ -1131,15 +1131,15 @@
       if (ch) cProps.style = Object.assign({}, cProps.style, ch.vars, ch.base)
       if (!F.open.mathRef) F.open.mathRef = makeMathRef(F.open.props.ref)
       cProps.ref = F.open.mathRef
-      R = f.jsx(F.open.tag, cProps)
+      R = (typeof f!=="undefined"&&f.jsx?f.jsx(F.open.tag,cProps):(typeof l!=="undefined"&&l.jsx?l.jsx(F.open.tag,cProps):null))
       var outers = []
       for (var j = 0; j < F.outer.length; j++) outers.push(F.outer[j].el)
-      if (outers.length > 0) R = f.jsx(f.Fragment, { children: [R].concat(outers) })
+      if (outers.length > 0) R = (typeof f!=="undefined"&&f.jsx?f.jsx(f.Fragment,{children:[R].concat(outers)}):(typeof l!=="undefined"&&l.jsx?l.jsx(l.Fragment,{children:[R].concat(outers)}):[R].concat(outers)))
     } else {
       var all = []
       for (var m = 0; m < F.outer.length; m++) all.push(F.outer[m].el)
       if (tailEl) all.push(tailEl)
-      R = all.length === 0 ? null : (all.length === 1 ? all[0] : f.jsx(f.Fragment, { children: all }))
+      R = all.length === 0 ? null : (all.length === 1 ? all[0] : (typeof f!=="undefined"&&f.jsx?f.jsx(f.Fragment,{children:all}):(typeof l!=="undefined"&&l.jsx?l.jsx(l.Fragment,{children:all}):all)))
     }
 
     if (R) {
@@ -1746,10 +1746,20 @@
 
   // 全量路径根容器基座：fullRender（流式切片/历史/终帧）给带 data-vcp-* 的根容器
   // 注入 --vcp-* 变量与卡片基座——背景从第一帧就在场。
+  // v7.3 修复：JSX 运行时变量名随前端代际变化（rc.8+ 为 l，旧代为 f），
+  // 此处原写裸引用 f.Fragment → 在新前端抛 ReferenceError（被 render 的 catch 吞掉，
+  // 静默回退源码）。改为运行时探测，取不到时返回 null 走安全分支。
+  function fragOf() {
+    if (typeof f !== 'undefined' && f && f.Fragment) return f.Fragment
+    if (typeof l !== 'undefined' && l && l.Fragment) return l.Fragment
+    return null
+  }
+
   function injectRootChrome(R) {
     if (!R || typeof R !== 'object') return
     var el = R
-    if (el.type === f.Fragment && el.props && Array.isArray(el.props.children) && el.props.children.length) {
+    var frag = fragOf()
+    if (frag && el.type === frag && el.props && Array.isArray(el.props.children) && el.props.children.length) {
       el = el.props.children[0]
     }
     if (!el || typeof el !== 'object' || !el.props) return
@@ -1816,7 +1826,7 @@
   // 兼容测试 stub（{tag,props,children}，ref 在 props.ref）用 'ref' in node 区分。
   function attachMathRef(node, streaming) {
     if (!node || typeof node !== 'object') return
-    var isEl = (node.type && node.type !== f.Fragment) || !!node.tag
+    var isEl = (node.type && (!fragOf() || node.type !== fragOf())) || !!node.tag
     if (isEl) {
       var curRef = ('ref' in node ? node.ref : (node.props && node.props.ref)) || null
       if (curRef && curRef.__vcpMathRef) return

@@ -49,9 +49,14 @@ ok('node --check 通过', () => {
 const t = fs.readFileSync(bundle, 'utf8')
 
 console.log('== 2. case"html" 分支特征 ==')
+// 前端代际：老版（vc 形态 · n.value,i.streaming）、rc.8+ 新版（Xu 形态 · n.value,l.streaming）、
+// 0.1.7（x8/ub 形态 · e.value,o.streaming）
 ok('渲染开关 dsh.rawHtml', () => assert.ok(t.includes('dsh.rawHtml')))
 ok('稳定区模块 __vcpStable', () => assert.ok(t.includes('__vcpStable')))
-ok('case"html" 调 __vcpStable.render', () => assert.ok(t.includes('__vcpStable.render(n.value,i.streaming)')))
+ok('case"html" 调 __vcpStable.render', () => assert.ok(
+  t.includes('__vcpStable.render(n.value,i.streaming)') ||
+  t.includes('__vcpStable.render(n.value,l.streaming)') ||
+  t.includes('__vcpStable.render(e.value,o.streaming)')))
 ok('图片转换正则 ![..](..)', () => assert.ok(t.includes('!\\[([^\\]]*)\\]\\(([^)]+)\\)')))
 ok('图片 URL 白名单 data:image', () => assert.ok(t.includes('data:image\\/')))
 ok('流式动画剥离正则', () => assert.ok(t.includes('animation:([^;"\']*);?')))
@@ -66,9 +71,10 @@ ok('缓存键区分流式/非流式', () => assert.ok(t.includes("(streaming ? '
 ok('容器开标签 props 解析', () => assert.ok(t.includes('parseOpen')))
 
 console.log('== 4. vc() 增强特征 ==')
+// 属性循环变量名随压缩代际变化：老版 c/s，新版 d/u，0.1.7 u/s
 ok('onclick→input 桥', () => assert.ok(t.includes('__dshInput')))
-ok('on* 属性安全过滤', () => assert.ok(t.includes('/^on/i.test(c.name)')))
-ok('script 标签过滤', () => assert.ok(t.includes('i.localName==="script"')))
+ok('on* 属性安全过滤', () => assert.ok(t.includes('/^on/i.test(c.name)') || t.includes('/^on/i.test(d.name)') || t.includes('/^on/i.test(u.name)')))
+ok('script 标签过滤', () => assert.ok(['i','o','l'].some(v => t.includes(v+'.localName==="script"'))))
 ok('style 危险属性过滤', () => assert.ok(t.includes('position\\s*:\\s*fixed')))
 ok('z-index 过滤', () => assert.ok(t.includes('z-index\\s*:\\s*\\d{4,}')))
 ok('content: 过滤', () => assert.ok(t.includes('content\\s*:[^;]')))

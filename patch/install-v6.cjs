@@ -115,6 +115,18 @@ const CASE_V6_NEW_LEGACY = String.raw`case"html":return function(){if(typeof loc
 // vc(Xu) 属性循环 → v6（新版变量名 d/l/u；style 解析内联，含 onclick 桥 / 词边界过滤 / URL 白名单 / ref 锁定）
 const VC_V6_NEW = String.raw`for(const d of l.attributes){if(d.name==="onclick"){const m=/^input\s*\(\s*['"]([\s\S]*?)['"]\s*\)\s*;?\s*$/.exec(d.value);if(m)u.onClick=function(){const fn=window.__dshInput;fn&&fn(m[1])};continue}if(/^on/i.test(d.name))continue;if(d.name==="style"){let sv=d.value;sv=sv.replace(/position\s*:\s*fixed\s*;?/gi,"").replace(/z-index\s*:\s*\d{4,}\s*;?/gi,"").replace(/(?<![\w-])content\s*:[^;]*;?/gi,"");let so={};for(const st of sv.split(";")){const ci=st.indexOf(":");if(ci===-1)continue;const k=st.slice(0,ci).trim().replace(/-([a-z])/g,(x,y)=>y.toUpperCase());so[k]=st.slice(ci+1).trim()}u.style=so;u.ref=function(el){if(el)for(const st2 of sv.split(";")){const j=st2.indexOf(":");if(j===-1)continue;const p=st2.slice(0,j).trim(),v=st2.slice(j+1).trim();if(v&&/^(color|font-family|font-size|font-weight|font-style|line-height|letter-spacing|text-align|text-shadow)$/.test(p))el.style.setProperty(p,v,"important")}};continue}if(d.name==="class"){u.className=d.value;continue}if(d.name==="href"&&!/^(https?:|mailto:|\/|#)/i.test(d.value))continue;if(d.name==="src"&&!/^(https?:|data:image\/|\/|#)/i.test(d.value))continue;if((d.name==="action"||d.name==="formaction"||d.name==="xlink:href")&&!/^(https?:|mailto:|\/|#)/i.test(d.value))continue;u[d.name]=d.value}`
 
+// ---- 0.1.7-rc.2 前端锚点（index-Q6zc2uHV.js）----
+// markdown case 参数 (e,n,o)，html 节点值是 e.value，code 渲染函数是 vb。
+// DOM 解析器是 x8(e,n)，style 解析函数是 ub(e)，属性循环变量是 u/o/s。
+const CASE_017 = String.raw`case"html":return e.value;case"code":return vb(e,n,o);`
+const CASE_V6_017 = String.raw`case"html":return function(){if(typeof localStorage!=="undefined"&&localStorage.getItem("dsh.rawHtml")!=="0"){try{var vr=window.__vcpStable&&window.__vcpStable.render(e.value,o.streaming);if(vr!==null&&vr!==undefined)return vr}catch(err){if(typeof console!=="undefined")console.warn("[vcp] html 渲染异常，已回退源码",err)}}else if(typeof console!=="undefined")console.warn("[vcp] html 渲染已关闭（dsh.rawHtml===\"0\"，</> 按钮可重新开启）");return e.value}();case"code":return vb(e,n,o);`
+const CODE_CASE_017 = String.raw`case"code":return vb(e,n,o);`
+const CODE_CASE_017_V6 = String.raw`case"code":{try{const _v=(e.value||"").trim();if(typeof localStorage!=="undefined"&&localStorage.getItem("dsh.rawHtml")!=="0"&&/^<div\s+id=["']vcp-root["']/i.test(_v)){const _r=window.__vcpStable&&window.__vcpStable.render(e.value,o.streaming);if(_r!==null&&_r!==undefined)return _r}}catch(_e){if(typeof console!=="undefined")console.warn("[vcp] code 围栏渲染异常，已回退代码块",_e)}return vb(e,n,o)}`
+const VC_017 = String.raw`for(const u of o.attributes)u.name==="class"?s.className=u.value:u.name==="style"?s.style=ub(u.value):s[u.name]=u.value;`
+const SCRIPT_FILTER_017 = String.raw`if(o.localName==="script"||o.localName==="iframe"||o.localName==="object"||o.localName==="embed")return null;`
+const VC_V6_017 = String.raw`for(const u of o.attributes){if(u.name==="onclick"){const m=/^input\s*\(\s*['"]([\s\S]*?)['"]\s*\)\s*;?\s*$/.exec(u.value);if(m)s.onClick=function(){const fn=window.__dshInput;fn&&fn(m[1])};continue}if(/^on/i.test(u.name))continue;if(u.name==="style"){let sv=u.value;sv=sv.replace(/position\s*:\s*fixed\s*;?/gi,"").replace(/z-index\s*:\s*\d{4,}\s*;?/gi,"").replace(/(?<![\w-])content\s*:[^;]*;?/gi,"");s.style=ub(sv);s.ref=function(el){if(el)for(const d of sv.split(";")){const j=d.indexOf(":");if(j===-1)continue;const p=d.slice(0,j).trim(),v=d.slice(j+1).trim();if(v&&/^(color|font-family|font-size|font-weight|font-style|line-height|letter-spacing|text-align|text-shadow)$/.test(p))el.style.setProperty(p,v,"important")}};continue}if(u.name==="class"){s.className=u.value;continue}if(u.name==="href"&&!/^(https?:|mailto:|\/|#)/i.test(u.value))continue;if(u.name==="src"&&!/^(https?:|data:image\/|\/|#)/i.test(u.value))continue;if((u.name==="action"||u.name==="formaction"||u.name==="xlink:href")&&!/^(https?:|mailto:|\/|#)/i.test(u.value))continue;s[u.name]=u.value}`
+const VC_DEF_017_BEFORE = String.raw`}function x8(e,n){`
+
 // ---- case"code" 围栏兜底（v6.30 → v6.35 三态化 · 老版前端锚点）----
 // 模型把卡片包进 ```html 围栏时 markdown 解析为 code 节点 → 显示源码；
 // 兜底：代码块以 <div id="vcp-root" 开头 → 调 vcp render（vcp-root 白名单防误伤普通代码）。
@@ -169,16 +181,18 @@ function main() {
   let t = fs.readFileSync(file, 'utf8')
 
   // 前端代际探测：rc.8+ 压缩器改名（Xu/jd 或 Sd），锚点组不同（幂等加固与主流程共用）
-  const isNewFrontend = t.includes('function Xu(n,i){') && !t.includes('function vc(n,r){')
-  if (isNewFrontend) console.log('[install-v6] 探测到新版前端（rc.8+ · Xu 压缩形态），使用新锚点组')
+  const is017Frontend = t.includes(CASE_017) && t.includes(VC_017) && t.includes('function x8(e,n){') && t.includes('function ub(e){')
+  const isNewFrontend = !is017Frontend && t.includes('function Xu(n,i){') && !t.includes('function vc(n,r){')
+  if (is017Frontend) console.log('[install-v6] 探测到 0.1.7 前端（x8/ub 压缩形态），使用 0.1.7 锚点组')
+  else if (isNewFrontend) console.log('[install-v6] 探测到新版前端（rc.8+ · Xu 压缩形态），使用新锚点组')
 
   // 已是 v6 → 增量加固：老 v6.0 形态（==="1"）升级三态化、补 case"code" 围栏兜底；
   // 无变更则跳过（幂等）。有变更时备份 + 写回 + node --check + 失败回滚。
   if (t.includes(V6_MARK)) {
     let hardened = t
     const done = []
-    const legacyTarget = isNewFrontend ? CASE_V6_NEW_LEGACY : CASE_V6_LEGACY
-    const newTarget = isNewFrontend ? CASE_V6_NEW : CASE_V6
+    const legacyTarget = is017Frontend ? null : (isNewFrontend ? CASE_V6_NEW_LEGACY : CASE_V6_LEGACY)
+    const newTarget = is017Frontend ? CASE_V6_017 : (isNewFrontend ? CASE_V6_NEW : CASE_V6)
     const nLegacy = countOccurrences(hardened, legacyTarget)
     if (nLegacy === 1) {
       hardened = hardened.split(legacyTarget).join(newTarget)
@@ -186,7 +200,11 @@ function main() {
     } else if (nLegacy > 1) {
       console.warn('[install-v6] 加固跳过：case"html" 老形态命中多次（异常），不自动修改')
     }
-    if (!isNewFrontend && countOccurrences(hardened, CODE_CASE_V3) === 0) {
+    if (is017Frontend && countOccurrences(hardened, CODE_CASE_017_V6) === 0 && countOccurrences(hardened, CODE_CASE_017) === 1) {
+      hardened = hardened.split(CODE_CASE_017).join(CODE_CASE_017_V6)
+      done.push('case"code" 围栏兜底 → 0.1.7')
+    }
+    if (!is017Frontend && !isNewFrontend && countOccurrences(hardened, CODE_CASE_V3) === 0) {
       for (const [label, from] of [['case"code"(原始)', CODE_CASE_RAW], ['case"code"(v6.30)', CODE_CASE_V1], ['case"code"(v6.32)', CODE_CASE_V2]]) {
         const nc = countOccurrences(hardened, from)
         if (nc === 1) { hardened = hardened.split(from).join(CODE_CASE_V3); done.push('case"code" 围栏兜底 → v6.35 三态化'); break }
@@ -220,12 +238,14 @@ function main() {
   fs.copyFileSync(file, bak)
   console.log('[install-v6] 备份:', bak)
 
-  const caseTarget = isNewFrontend ? CASE_V6_NEW : CASE_V6
+  const caseTarget = is017Frontend ? CASE_V6_017 : (isNewFrontend ? CASE_V6_NEW : CASE_V6)
 
   let next = t
 
   // 1) case"html" 分支 → v6
-  if (countOccurrences(next, CASE_ORIG) === 1) {
+  if (is017Frontend && countOccurrences(next, CASE_017) === 1) {
+    next = replaceOnce(next, CASE_017, caseTarget, 'case"html"(0.1.7)')
+  } else if (countOccurrences(next, CASE_ORIG) === 1) {
     next = replaceOnce(next, CASE_ORIG, caseTarget, 'case"html"(原始)')
   } else if (!isNewFrontend && countOccurrences(next, CASE_ENHANCED_START) === 1 && countOccurrences(next, CASE_ENHANCED_END) >= 1) {
     next = replaceRange(next, CASE_ENHANCED_START, CASE_ENHANCED_END, caseTarget, 'case"html"(增强态)')
@@ -242,7 +262,20 @@ function main() {
 
   // 1.5) case"code" 围栏兜底 → v6.35 三态化（增强能力：模型把卡片包进 ```html 围栏时仍渲染）
   // 新版前端（rc.8+）case"code" 形态未收录：跳过 + 警告，不阻塞安装（不影响基础渲染）。
-  if (isNewFrontend) {
+  if (is017Frontend) {
+    if (countOccurrences(next, CODE_CASE_017) === 1) {
+      next = replaceOnce(next, CODE_CASE_017, CODE_CASE_017_V6, 'case"code"(0.1.7)')
+      if (next === null) {
+        console.error('[install-v6] case"code" 0.1.7 替换失败，中止（备份已保留）。')
+        process.exit(1)
+      }
+      console.log('[install-v6] ✓ case"code" 围栏兜底 → 0.1.7')
+    } else if (countOccurrences(next, CODE_CASE_017_V6) === 1) {
+      console.log('[install-v6] ✓ case"code" 围栏兜底已是 0.1.7')
+    } else {
+      console.warn('[install-v6] 0.1.7 case"code" 锚点未命中，围栏兜底跳过（不影响基础渲染）')
+    }
+  } else if (isNewFrontend) {
     console.warn('[install-v6] 新版前端（rc.8+）case"code" 锚点未收录，围栏兜底跳过（不影响基础渲染）')
   } else if (countOccurrences(next, CODE_CASE_V3) !== 0) {
     console.log('[install-v6] ✓ case"code" 围栏兜底已是 v6.35 三态化')
@@ -267,7 +300,9 @@ function main() {
   }
 
   // 2) vc(Xu) 属性循环 → v6
-  if (isNewFrontend) {
+  if (is017Frontend) {
+    next = replaceOnce(next, VC_017, SCRIPT_FILTER_017 + VC_V6_017, 'x8 属性循环(0.1.7)')
+  } else if (isNewFrontend) {
     // rc.8+：原始态区间替换（起点/终点不含 jd/Sd 函数名，两版通用），额外补 script 过滤
     next = replaceRange(next, VC_NEW_START, VC_NEW_END, SCRIPT_FILTER_NEW + VC_V6_NEW, 'Xu 属性循环(rc.8+ 原始态)')
   } else if (countOccurrences(next, VC_ORIG) === 1) {
@@ -294,9 +329,9 @@ function main() {
     console.error('[install-v6] 读取 patch/v6-inject.js 失败：', e.message)
     process.exit(1)
   }
-  const defBefore = isNewFrontend ? VC_DEF_NEW_BEFORE : VC_DEF_BEFORE
-  const defAfter = isNewFrontend ? ';function Xu(n,i){' : ';function vc(n,r){'
-  const defLabel = isNewFrontend ? 'Xu 定义前注入 v6 模块' : 'vc 定义前注入 v6 模块'
+  const defBefore = is017Frontend ? VC_DEF_017_BEFORE : (isNewFrontend ? VC_DEF_NEW_BEFORE : VC_DEF_BEFORE)
+  const defAfter = is017Frontend ? ';function x8(e,n){' : (isNewFrontend ? ';function Xu(n,i){' : ';function vc(n,r){')
+  const defLabel = is017Frontend ? 'x8 定义前注入 v6 模块' : (isNewFrontend ? 'Xu 定义前注入 v6 模块' : 'vc 定义前注入 v6 模块')
   next = replaceOnce(next, defBefore, '}' + v6Inject + defAfter, defLabel)
   if (next === null) {
     console.error('[install-v6] v6 模块注入失败，中止（备份已保留）。')
@@ -318,7 +353,7 @@ function main() {
   }
 
   const written = fs.readFileSync(file, 'utf8')
-  const onFilterMark = isNewFrontend ? 'if(/^on/i.test(d.name))continue;' : 'if(/^on/i.test(c.name))continue;'
+  const onFilterMark = is017Frontend ? 'if(/^on/i.test(u.name))continue;' : (isNewFrontend ? 'if(/^on/i.test(d.name))continue;' : 'if(/^on/i.test(c.name))continue;')
   const features = [
     [V6_MARK, 'v6 标记 window.__vcpStable'],
     ['window.__dshInput', 'onclick 交互桥 __dshInput'],
@@ -330,11 +365,19 @@ function main() {
     if (!written.includes(mark)) {
       ok = false
       console.error(`[install-v6] 特征缺失：${label}`)
-      const idx = written.indexOf(isNewFrontend ? VC_NEW_START : VC_ENHANCED_START)
+      const idx = written.indexOf(is017Frontend ? 'for(const u of o.attributes){' : (isNewFrontend ? VC_NEW_START : VC_ENHANCED_START))
       if (idx !== -1) console.error('[install-v6] debug vc 循环附近 >>>', JSON.stringify(written.slice(idx, idx + 260)))
     }
   }
-  if (countOccurrences(written, CASE_ORIG) !== 0) {
+  if (is017Frontend && countOccurrences(written, CASE_017) !== 0) {
+    ok = false
+    console.error('[install-v6] 特征异常：仍存在 0.1.7 原始 case"html" 分支')
+  }
+  if (is017Frontend && countOccurrences(written, VC_017) !== 0) {
+    ok = false
+    console.error('[install-v6] 特征异常：仍存在 0.1.7 原始 x8 属性循环')
+  }
+  if (!is017Frontend && countOccurrences(written, CASE_ORIG) !== 0) {
     ok = false
     console.error('[install-v6] 特征异常：仍存在原始 case"html" 分支')
   }

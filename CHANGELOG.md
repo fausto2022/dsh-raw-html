@@ -2,6 +2,16 @@
 
 本文件记录插件版本（`package.json` 的 `version`）与补丁代号（`patch/*` 注入模块）两条线的演进。
 
+## 0.6.4（补丁 v7.3 · JSX 运行时代际加固 + 0.1.7 前端锚点）
+
+- **修复·裸引用 JSX 运行时导致渲染静默回退源码（fausto2022 · 2026-09-29）**：`patch/v6-inject.js` 有 **11 处**裸引用 `f.jsx`/`f.Fragment`（无 `typeof` 守卫）。前端代际更替后 JSX 运行时变量改名（新版为 `l`），这些引用在运行时抛 `ReferenceError`，被 `render()` 内的 `try/catch` 吞掉 → **静默回退显示源码**，界面上没有任何报错，表现为「插件装了但不生效」。全部改为运行时探测（新增 `fragOf()` 取 `f.Fragment`/`l.Fragment`，取不到走安全分支），加固后裸引用归零。
+
+- **新增·0.1.7 前端（`index-Q6zc2uHV.js`）锚点支持**：该版本压缩形态再次变化——DOM 解析器 `x8(e,n)`、style 解析 `ub(e)`、markdown case 参数 `(e,n,o)`、code 渲染 `vb`。上游此前只认 `vc`/`Xu` 两代，新前端会锚点 0 命中、**安装直接失败**。补：①`CASE_017`/`VC_017`/`CODE_CASE_017` 等锚点组；②`is017Frontend` 代际探测（优先于 `Xu` 判断）；③`case"html"`（含三态化）、`case"code"` 围栏兜底、`vc` 属性循环（onclick 桥/style 过滤/URL 白名单/ref 锁定）、模块注入点四条链路的 0.1.7 形态；④`v6-inject.js` 的 `__vcpVc`/`__vcpHp` 优先探测 `x8`/`ub`，兼容两代 bundle。
+
+- **测试·`tests/bundle.test.mjs` 双代兼容**：`case"html"` 渲染调用、`on*` 过滤、`script` 过滤三处断言原硬编码老代变量名（`n.value`/`c.name`/`i.localName`），改为接受两代形态，使测试在新前端下同样可跑。
+
+- **验证**：①上游 `install-v6.cjs` 对未打补丁 0.1.7 bundle **锚点识别失败、安装中止**（对照）；本版四个锚点全部命中并写入成功。②Chromium 真实浏览器端到端：0.1.7 与老代（`Xu` 形态）bundle **各 3/3 通过**（终帧 + 流式中途 + 流式收尾），`[vcp-stable]` 正常渲染日志，无 `ReferenceError`。③回归：`security`/`smoke`/`stable`/`math`/`mermaid`/`trusted` 全绿，`bundle.test.mjs` 对新前端 bundle 39 项断言全通过。
+
 ## 0.6.2（补丁 v7.2 · 可信模式插件化）
 
 - **审计·安装链三疏漏修复——不给其他用户造成安装困扰（蓝汐 · 2026-08-28 · 先生点名「审计一键安装/补丁注入，不能给用户造成困扰」）**：全链审计发现并修复三处会让其他用户踩坑的疏漏——①**install-v6.cjs 的 case"html" 目标形态落后**：仍是 v6.0 老逻辑（`==="1"`），全新安装后开关未设置时 HTML 不渲染（依赖自检兜底）；升级为 **v6.35 三态化**（`!=="0"` + console.warn 回退诊断），老版/新版（i/l 参数）两套同步；②**install-v6.cjs 缺 case"code" 围栏兜底**：模型把卡片包进 ```html 围栏时显示源码；补 v6.30→v6.35 状态机（CODE_CASE_RAW/V1/V2→V3，vcp-root 白名单 + 三态化），新版前端形态未收录则警告跳过不阻塞；③**trusted-patch.cjs 只支持老版前端**（`i.localName` 锚点），新版 rc.8+（`Xu`/`l` 压缩形态）会锚点 0 命中直接失败——补新锚点组（`l.localName`）+ 代际探测 + 双幂等 + 双语法预检。另将 install-v6 幂等分支升级为**增量加固**（已打旧 v6.0 老逻辑的用户跑本脚本自动升三态化 + 补围栏兜底，备份 + node --check + 失败回滚）；install-all.cjs 加第二步 `update-v6-inject.cjs`（旧 v6 渲染模块就地升级，全新安装幂等跳过）。验证：老 v6 形态模拟 bundle 加固通过（三态化 + 围栏兜底回归）、trusted-patch 新老双锚点模拟全过（新版 Xu 探测/替换/幂等 + 老版还原）、install-all 三步链幂等干跑 exit 0、全套回归 315 断言全绿。
